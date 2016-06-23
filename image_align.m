@@ -13,7 +13,7 @@ function [im_fused, im_visible_registered, points_thermal, points_visible] = ima
         im_visible_registered = imwarp(im_visible,transform,'OutputView',Rthermal);
         
         f = figure;
-        im_fused = imfuse(im_thermal, im_visible_registered,'falsecolor');
+        im_fused = imfuse(im_thermal, im_visible_registered,'blend');
         imshow(im_fused);
         
         ans_done = questdlg('Keep this alignment?','Prompt','yes','no','yes');

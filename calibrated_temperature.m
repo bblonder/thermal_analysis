@@ -3,6 +3,7 @@ function [Tkelvin] = calibrated_temperature(lPixval, m_RelHum, m_AtmTemp, m_Obje
     ASY_SAFEGUARD = 1.0002;
 
     [m_AtmTao, m_K1, m_K2] = doUpdateCalcConst(m_RelHum, m_AtmTemp, m_ObjectDistance, m_X, m_alpha1, m_beta1, m_alpha2, m_beta2, m_Emissivity, m_ExtOptTransm, m_AmbTemp, m_ExtOptTemp, m_B, m_F, m_R);
+    %fprintf('tao: %.2f k1: %.2f k2: %.2f\n', m_AtmTao, m_K1, m_K2)
 
     dPow = (lPixval - m_J0) / m_J1;
     dSig = m_K1 * dPow - m_K2;
@@ -94,6 +95,8 @@ function [K1] = doCalcK1(m_AtmTao, m_Emissivity, m_ExtOptTransm)
 end
 
 function [K2] = doCalcK2(dAmbObjSig, dAtmObjSig, dExtOptTempObjSig, m_Emissivity, m_AtmTao, m_ExtOptTransm)
+    fprintf('sig_refl: %.2f sig_atm: %.2f sig_extopt: %.2f\n', dAmbObjSig, dAtmObjSig, dExtOptTempObjSig)
+
     temp1 = 0.0;
     temp2 = 0.0;
     temp3 = 0.0;
@@ -131,28 +134,29 @@ function [objSign] = tempToObjSig(dblKelvin, m_B, m_F, m_R)
     dbl_reg = dblKelvin;
 
     % objSign = R / (exp(B/T) - F)
+    %objSign = m_R / (exp(m_B/dbl_reg) - m_F);
 
-    if (dbl_reg > 0.0)
-        dbl_reg = m_B / dbl_reg; 
-
-        if (dbl_reg < EXP_SAFEGUARD)
-            dbl_reg = exp(dbl_reg); 
-
-            if (m_F <= 1.0)
-                if ( dbl_reg < ASY_SAFEGUARD )
-                    dbl_reg = ASY_SAFEGUARD; % Don't get above a R/(1-F) (horizontal) asymptote
-                end
-            else
-                % F > 1.0
-                if ( dbl_reg < m_F*ASY_SAFEGUARD )
-                    dbl_reg = m_F*ASY_SAFEGUARD;
-                    % Don't get too close to a B/ln(F) (vertical) asymptote
-                end
-            end
-
-            objSign = m_R/(dbl_reg - m_F);
-        end
-    end
+     if (dbl_reg > 0.0)
+         dbl_reg = m_B / dbl_reg; 
+ 
+         if (dbl_reg < EXP_SAFEGUARD)
+             dbl_reg = exp(dbl_reg); 
+ 
+             if (m_F <= 1.0)
+                 if ( dbl_reg < ASY_SAFEGUARD )
+                     dbl_reg = ASY_SAFEGUARD; % Don't get above a R/(1-F) (horizontal) asymptote
+                 end
+             else
+                 % F > 1.0
+                 if ( dbl_reg < m_F*ASY_SAFEGUARD )
+                     dbl_reg = m_F*ASY_SAFEGUARD;
+                     % Don't get too close to a B/ln(F) (vertical) asymptote
+                 end
+             end
+ 
+             objSign = m_R/(dbl_reg - m_F);
+         end
+     end
 end
     
 
