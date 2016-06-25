@@ -4,18 +4,29 @@ function [correctedMean movMean array_aligned stats] = align_thermal(folder_in_t
      
     % set alignment parameters
     if (nargin < 2)
-        interval_keyframes = 50;
-        interval_frames = 10;
+        interval_keyframes = 10;
+        interval_frames = 1;
     end
 
     % load in thermal images
     files_thermal_timeseries_npy = dir([folder_in_thermal_timeseries '*.npy']);
-
-    % subset the images to avoid weird focused ones
-    trim = 2;
-    id_start = trim;
-    id_stop = length(files_thermal_timeseries_npy)-trim;
-    files_thermal_timeseries_npy = files_thermal_timeseries_npy(id_start:id_stop);
+    
+    keepfiles = ones([length(files_thermal_timeseries_npy) 1]);
+    for i=1:length(files_thermal_timeseries_npy)
+        fn = fullfile(folder_in_thermal_timeseries, files_thermal_timeseries_npy(i).name);
+        im_current = double(readNPY(fn));
+        
+        zeros = nnz(im_current==0);
+        if (zeros > 50)
+            fprintf('drop %d %d %s\n', i, zeros, fn);
+            keepfiles(i) = 0;
+        else
+            fprintf('.');
+        end
+        fprintf('\n');
+        
+    end
+    files_thermal_timeseries_npy = files_thermal_timeseries_npy(keepfiles>0);
     numfiles_thermal_timeseries = length(files_thermal_timeseries_npy);
     
     % get first frame
@@ -73,8 +84,9 @@ function [correctedMean movMean array_aligned stats] = align_thermal(folder_in_t
         end
         
         im_current = double(readNPY(fn));
+
         % transform the raw image too
-        im_current_warped = imwarp(im_current,affine2d(transform_current),'OutputView',imref2d(size(im_current)));
+        im_current_warped = imwarp(im_current,affine2d(transform_current),'OutputView',imref2d(size(im_current)));         
         
         imshow(rescale_image_quantile(im_current_warped, 0.05, 0.95));
         % reconvert back to uint16

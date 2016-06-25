@@ -1,6 +1,4 @@
-% analyze_folder('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt june 20th diurnal/combined/', '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt june 20th diurnal/visible/')
-
-function [] = 
+% analyze_folder('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt june 20th diurnal/combined/', '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt june 20th diurnal/visible/', 'output', 3000)
 
 
 function [] = analyze_folder(folder_in_thermal_timeseries, folder_in_visible, folder_out, trim)
@@ -54,7 +52,7 @@ function [] = analyze_folder(folder_in_thermal_timeseries, folder_in_visible, fo
        stats_final = vertcat(stats_final, stats{i}); 
     end
     
-    save('image_array.mat', image_array)
+    %save('image_array.mat', image_array)
     
     % loop over visible images
     files_visible = dir([folder_in_visible '*jpg']);
@@ -62,7 +60,7 @@ function [] = analyze_folder(folder_in_thermal_timeseries, folder_in_visible, fo
     points_visible = [];
     for i=1:length(files_visible)
         image_this = imread(fullfile(folder_in_visible,files_visible(i).name));
-        [image_fused, image_visible_registered, points_thermal, points_visible] = image_align(image_thermal_mean, image_this, points_thermal, points_visible);
+        [image_fused, image_visible_registered, points_thermal, points_visible] = image_align(image_thermal_mean, image_this);
 
 
         done = false;

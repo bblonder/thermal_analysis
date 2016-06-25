@@ -95,7 +95,7 @@ function [K1] = doCalcK1(m_AtmTao, m_Emissivity, m_ExtOptTransm)
 end
 
 function [K2] = doCalcK2(dAmbObjSig, dAtmObjSig, dExtOptTempObjSig, m_Emissivity, m_AtmTao, m_ExtOptTransm)
-    fprintf('sig_refl: %.2f sig_atm: %.2f sig_extopt: %.2f\n', dAmbObjSig, dAtmObjSig, dExtOptTempObjSig)
+    %fprintf('sig_refl: %.2f sig_atm: %.2f sig_extopt: %.2f\n', dAmbObjSig, dAtmObjSig, dExtOptTempObjSig)
 
     temp1 = 0.0;
     temp2 = 0.0;
