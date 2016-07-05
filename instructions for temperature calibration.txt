@@ -1,0 +1,21 @@
+0. rename any folders that are not date-specified by running in R
+	reset_time(folder, y, m, d, h, m, s) 
+	function
+	 ** still to do with road data
+
+
+1. put all thermal images in the same 'combined' folder along with all accessory (e.g. stats) files
+2. identify frames that are misfocused or have extraneously high temperature values)
+
+2. to stabilize video, in MATLAB run 
+	[cm mm aa stats] = align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt june 20th diurnal/combined/', 10, 1);
+	** this will stitch together every 1 frames in order of filename with stabilization every 10 keyframes
+	** no further output beyond the variables generated
+
+3. to create a temperature calibrated video relative to a known temperature timeseries, in MATLAB run
+	[Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa, stats, 263, 363, 1, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt june 20th diurnal/temperature_reference_CBT_20_06_2016_Rozi.xlsx', 'cbt_2016_06_20.mat');
+	% this will truncate any temperatures below 263 and above 333, and will use the reference temperature set
+	
+4. x = analyze_all('cbt_2016_06_20.mat','/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt june 20th diurnal/visible/','out');
+% 
+% 

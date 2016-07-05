@@ -10,9 +10,16 @@ function [im_fused, im_visible_registered, points_thermal, points_visible] = ima
 
     done = false;
     
-    f = figure;
+
     while (~done)
-        [points_thermal, points_visible] = cpselect(im_thermal, im_visible, 'Wait',true);
+            
+        % try to do alignment
+        if (isempty(points_thermal))
+            [points_thermal, points_visible] = cpselect(im_thermal, im_visible, 'Wait',true);
+        else
+            [points_thermal, points_visible] = cpselect(im_thermal, im_visible, points_thermal, points_visible, 'Wait',true);
+        end
+        
         try
             transform = fitgeotrans(points_visible, points_thermal, 'projective');
 
@@ -20,16 +27,18 @@ function [im_fused, im_visible_registered, points_thermal, points_visible] = ima
             im_visible_registered = imwarp(im_visible,transform,'OutputView',Rthermal);
 
             
-            im_visible_registered_bw = adapthisteq(rgb2gray(im_visible_registered));
-            im_fused = imfuse(im_thermal, im_visible_registered_bw,'falsecolor','ColorChannels',[1 2 0]);
+            %im_visible_registered_bw = adapthisteq(rgb2gray(im_visible_registered));
+            im_fused = imfuse(im_thermal, im_visible_registered,'blend');
+            f = figure;
             imshow(im_fused);
-
+          
+            
         end
         
-        ans_done = questdlg('Keep this alignment?','Prompt','yes','no','yes');
+        ans_done = MFquestdlg([0.5 0.5], 'Keep this alignment?','Prompt','yes','no','yes');
         if (strcmp(ans_done,'yes')==1)        
             done = true;
+            close(f);
         end
     end
-    close(f);
 end
