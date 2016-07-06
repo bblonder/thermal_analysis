@@ -15,7 +15,7 @@ function [] = redraw(p, im)
         J(bw) = 0;
     end
     
-    subplot(1,2,1); imshow(J); 
+    subaxis(1,2,1,'Spacing', 0.03, 'Padding', 0, 'Margin', 0); imshow(J); axis tight; axis off;
     
     xlim_this = evalin('base', 'xlim_this');
     ylim_this = evalin('base', 'ylim_this');

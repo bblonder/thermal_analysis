@@ -21,7 +21,7 @@ function [correctedMean movMean array_aligned stats] = align_thermal(folder_in_t
             fprintf('drop %d %d %s\n', i, zeros, fn);
             keepfiles(i) = 0;
         else
-            fprintf('.');
+            fprintf(' *%d* ',i);
         end
         fprintf('\n');
         

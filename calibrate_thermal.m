@@ -1,5 +1,5 @@
-% [cm mm aa stats] = align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt june 20th diurnal/combined/', 20, 5);
-% [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa, stats, 263, 333, 1, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt june 20th diurnal/temperature_reference_CBT_20_06_2016_Rozi.xlsx', 'cbt_2016_06_20.mat');
+% [cm mm aa stats] = align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt june 20th diurnal/combined/', 20, 1);
+% [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa, stats, 263, 343, 1, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt june 20th diurnal/temperature_reference_CBT_20_06_2016_Rozi.xlsx', 'cbt_2016_06_20_newer.mat');
 
 % assumes that stats are in the format of 
 % [hours, minutes, seconds, temp_black, temp_refl, temp_sky]
@@ -18,7 +18,7 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     image_mean = zeros([size(image_array,1) size(image_array,2)]);
     for i=1:num_files
         image_mean = image_mean + double(image_array(:,:,i));
-        fprintf('.');
+        fprintf('%d\n',i);
     end
     image_mean = image_mean / num_files;
     
@@ -80,10 +80,12 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     end
     
     % convert radiometric counts to temperatures using trefl values
-    temp_array = repmat(single(0), size(image_array));
+    %temp_array = repmat(single(0), size(image_array));
+    temp_array = repmat(uint16(0), size(image_array));
     for i=1:length(stats)
+        fprintf('*');
         ithis = image_array(:,:,i);
-        ithis(ithis==0) = NaN; % remove any extraneous values values
+        %ithis(ithis==0) = NaN; % remove any extraneous values values
         
         temp_this = calibrated_temperature_simple(...
                 double(image_array(:,:,i)), ...
@@ -96,11 +98,15 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
             );
         
         % remove further extraneous values
-        temp_this(temp_this < bound_temp_lo) = NaN;
-        temp_this(temp_this > bound_temp_hi) = NaN;
+        %temp_this(temp_this < bound_temp_lo) = NaN;
+        %temp_this(temp_this > bound_temp_hi) = NaN;
+        temp_this(temp_this < bound_temp_lo) = 0;
+        temp_this(temp_this > bound_temp_hi) = 0;
         
-        temp_array(:,:,i) = temp_this;
+        %temp_array(:,:,i) = temp_this;
+        temp_array(:,:,i) = temp_this*100;
     end
+    fprintf('\n');
     
     if (dogroundcalibration==1)
         % choose region of interest
@@ -114,10 +120,12 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
         % calculate stats in this region
         temperature_stats = zeros([num_files 5]);
         for i=1:num_files
-            temp_this = temp_array(:,:,i);
+            %temp_this = temp_array(:,:,i);
+            temp_this = double(temp_array(:,:,i)) / 100;
             pixels_this = temp_this(pixels_keep);
             % keep non-NA pixels
-            pixels_this = pixels_this(~isnan(pixels_this));
+            %pixels_this = pixels_this(~isnan(pixels_this));
+            pixels_this = pixels_this(pixels_this>0);
 
             temperature_stats(i,1) = mean(pixels_this);
             temperature_stats(i,2) = std(pixels_this);
@@ -142,13 +150,21 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
         
         [b,~,~,~,~] = regress(temp_black(index_start:index_stop), [ones(size(temperature_stats(index_start:index_stop,4))) temperature_stats(index_start:index_stop,4) temperature_stats(index_start:index_stop,4).^2]);
 
-        Tkelvin_aligned_calibrated = b(1) + b(2) * temp_array + b(3) * temp_array.^2;
-
+        Tkelvin_aligned_calibrated = uint16(temp_array);
+        for i=1:num_files
+            temp_this = double(temp_array(:,:,i))/100;
+            Tkelvin_aligned_calibrated(:,:,i) = uint16( (b(1) + b(2) * temp_this + b(3) * temp_this.^2)*100 );
+            fprintf('|');
+        end
+        fprintf('\n');
+        %Tkelvin_aligned_calibrated = b(1) + (b(2)*100)*temp_array + (b(3)*100^2)*temp_array.^2;
+        %Tkelvin_aligned_calibrated = temp_array;
+        
         temp_new = zeros([num_files 1]);
         for i=1:num_files
-            temp_this = Tkelvin_aligned_calibrated(:,:,i);
+            temp_this = double(Tkelvin_aligned_calibrated(:,:,i))/100;
             pixels_this = temp_this(pixels_keep);
-            pixels_this = pixels_this(~isnan(pixels_this));
+            pixels_this = pixels_this(pixels_this>0);
             temp_new(i) = quantile(pixels_this,0.5);
             fprintf('/');
         end
@@ -161,11 +177,12 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     end
     
     
-    mediantemp = NaN([size(Tkelvin_aligned_calibrated,3) 1]);
-    mediantime = NaN([size(Tkelvin_aligned_calibrated,3) 1]);
+    mediantemp = zeros([size(Tkelvin_aligned_calibrated,3) 1]);
+    mediantime = zeros([size(Tkelvin_aligned_calibrated,3) 1]);
     for i=1:size(Tkelvin_aligned_calibrated,3)
-        pixels_all = Tkelvin_aligned_calibrated(:,:,i);
-        pixels_all = pixels_all(~isnan(pixels_all));
+        pixels_all = double(Tkelvin_aligned_calibrated(:,:,i))/100;
+        %pixels_all = pixels_all(~isnan(pixels_all));
+        pixels_all = pixels_all(pixels_all>0);
         
         mediantemp(i) = median(pixels_all);
         mediantime(i) = time_elapsed(i);
@@ -180,6 +197,6 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     
     dosave = questdlg('Save matrix of output','Do save?','yes','no','yes');
     if (strcmp(dosave,'yes'))
-        save(outputname, 'Tkelvin_aligned_calibrated', 'finalstats','-v7');
+        save(outputname, 'Tkelvin_aligned_calibrated', 'finalstats','-v7.3'); % this allows for partial loading
     end
 end

@@ -21,14 +21,13 @@ function [im_fused, im_visible_registered, points_thermal, points_visible] = ima
         end
         
         try
-            transform = fitgeotrans(points_visible, points_thermal, 'projective');
+            transform = fitgeotrans(points_visible, points_thermal, 'affine');
 
             Rthermal = imref2d(size(im_thermal));
             im_visible_registered = imwarp(im_visible,transform,'OutputView',Rthermal);
 
-            
-            %im_visible_registered_bw = adapthisteq(rgb2gray(im_visible_registered));
-            im_fused = imfuse(im_thermal, im_visible_registered,'blend');
+            im_thermal_flipped = imcomplement(im_thermal);
+            im_fused = imfuse(im_thermal_flipped, im_visible_registered(:,:,2),'ColorChannels',[1 0 2]);
             f = figure;
             imshow(im_fused);
           
@@ -38,7 +37,7 @@ function [im_fused, im_visible_registered, points_thermal, points_visible] = ima
         ans_done = MFquestdlg([0.5 0.5], 'Keep this alignment?','Prompt','yes','no','yes');
         if (strcmp(ans_done,'yes')==1)        
             done = true;
-            close(f);
         end
+        close(f);
     end
 end
