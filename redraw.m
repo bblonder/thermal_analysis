@@ -1,23 +1,42 @@
-function [] = redraw(p, im)
-    bw = poly2mask(p(:,1),p(:,2), size(im,1), size(im,2));
+function [] = redraw(p, im1, im2)
+    bw = poly2mask(p(:,1),p(:,2), size(im2,1), size(im2,2));
     
-    J = im;
-    if (size(J,3) > 1)
-        Jr = im(:,:,1);
-        Jg = im(:,:,2);
-        Jb = im(:,:,3);
+    J2 = im2;
+    if (size(J2,3) > 1)
+        J2r = im2(:,:,1);
+        J2g = im2(:,:,2);
+        J2b = im2(:,:,3);
         
-        Jg(bw) = 0;
-        Jb(bw) = 0;
+        J2g(bw) = 0;
+        J2b(bw) = 0;
         
-        J = cat(3, Jr, Jg, Jb);
+        J2 = cat(3, J2r, J2g, J2b);
     else
-        J(bw) = 0;
+        J2(bw) = 0;
     end
     
-    subaxis(1,2,1,'Spacing', 0.03, 'Padding', 0, 'Margin', 0); imshow(J); axis tight; axis off;
+    J1 = im1;
+    if (size(J1,3) > 1)
+        J1r = im1(:,:,1);
+        J1g = im1(:,:,2);
+        J1b = im1(:,:,3);
+        
+        J1g(bw) = 0;
+        J1b(bw) = 0;
+        
+        J1 = cat(3, J1r, J1g, J1b);
+    else
+        J1(bw) = 0;
+    end
     
+    subaxis(2,2,1,'Spacing', 0.0, 'Padding', 0, 'Margin', 0); imshow(J1); axis tight; axis off;    
     xlim_this = evalin('base', 'xlim_this');
     ylim_this = evalin('base', 'ylim_this');
-    set(gca,'xlim',xlim_this,'ylim',ylim_this)
+    set(gca,'xlim',xlim_this,'ylim',ylim_this);
+    
+    subaxis(2,2,2,'Spacing', 0.0, 'Padding', 0, 'Margin', 0); imshow(J2); axis tight; axis off;        
+    xlim_this = evalin('base', 'xlim_this');
+    ylim_this = evalin('base', 'ylim_this');
+    set(gca,'xlim',xlim_this,'ylim',ylim_this);
+    
 end

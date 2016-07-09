@@ -2,7 +2,7 @@
 %im_visible = imread('/Users/benjaminblonder/Desktop/thermal data/visible test_160617_180132/vistest 3.jpg');
 %image_align(im_thermal, im_visible)
 
-function [im_fused, im_visible_registered, points_thermal, points_visible] = image_align(im_thermal, im_visible, points_thermal, points_visible)
+function [im_fused, im_visible_registered, points_thermal, points_visible, transform] = image_align(im_thermal, im_visible, points_thermal, points_visible)
     if nargin <= 2
         points_thermal = [];
         points_visible = [];
