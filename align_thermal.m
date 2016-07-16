@@ -1,5 +1,5 @@
-% [cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt june 20th diurnal/combined/');
-function [correctedMean movMean array_aligned stats] = align_thermal(folder_in_thermal_timeseries, interval_keyframes, interval_frames)
+% [cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/pfeiler jun 30/thermal/combined/', 2, 1, 0.5, 200);
+function [correctedMean movMean array_aligned stats] = align_thermal(folder_in_thermal_timeseries, interval_keyframes, interval_frames, threshold, keyframe_id)
     addpath('npy-matlab-master');
      
     % set alignment parameters
@@ -30,8 +30,8 @@ function [correctedMean movMean array_aligned stats] = align_thermal(folder_in_t
     numfiles_thermal_timeseries = length(files_thermal_timeseries_npy);
     
     % get first frame
-    movMean = double(readNPY(fullfile(folder_in_thermal_timeseries, files_thermal_timeseries_npy(1).name)));
-    movMean = rescale_image_quantile(movMean, 0.05, 0.95);
+    movMean = double(readNPY(fullfile(folder_in_thermal_timeseries, files_thermal_timeseries_npy(keyframe_id).name)));
+    movMean = imgaussfilt(rescale_image_quantile(movMean, 0.01, 0.99),2);
     imgB = movMean;
     imgBp = imgB;
     correctedMean = imgBp;
@@ -66,11 +66,11 @@ function [correctedMean movMean array_aligned stats] = align_thermal(folder_in_t
                 % Read in new frame
                 imgB = double(readNPY(fn));
                 imgB_untransformed = imgB;
-                imgB = rescale_image_quantile(imgB, 0.05, 0.95);
+                imgB = imgaussfilt(rescale_image_quantile(imgB, 0.01, 0.99),2);
                 movMean = movMean + imgB;
 
                 % do stabilization transform and warp
-                H = cvexEstStabilizationTform(imgA,imgB,0.5);
+                H = cvexEstStabilizationTform(imgA,imgB,threshold);
                 HsRt = cvexTformToSRT(H);
                 Hcumulative = HsRt * Hcumulative;
                 imgBp = imwarp(imgB,affine2d(Hcumulative),'OutputView',imref2d(size(imgB)));
