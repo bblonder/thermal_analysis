@@ -1,8 +1,12 @@
 % [cm mm aa stats] = align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt jun 20/thermal/combined/', 20, 1);
 % [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa, stats, 263, 343, 1, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt jun 20/temperature_reference_CBT_20_06_2016_Rozi.xlsx', '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt jun 20/thermal/combined/160620_133726-000000-002000-visible.png', 'cbt_2016_06_20_newest.mat');
 
-% cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/pfeiler jun 27/thermal/combined/', 10, 1, 0.5, 200);
+% [cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/pfeiler jun 27/thermal/combined/', 10, 1, 0.5, 200);
 % [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa, stats, 263, 343, 1, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/pfeiler jun 27/reference_temperature_PFEILER_27_06_2016.xlsx', 800, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/pfeiler jun 27/thermal/thermal_control_160627_173852/160627_173852-000000-000300-visible.png', 'pfeiler_2016_06_27.mat');
+
+% [cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/painterboy jul 3/thermal/combined/', 2, 1, 0.5, 200);
+% [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa, stats, 263, 343, 1, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/painterboy jul 3/PBM 30.06.2016 temperatures.xlsx', -1250, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/painterboy jul 3/thermal/combined/160630_142527-000000-015600-visible.png', 'painterboy_2016_07_03.mat');
+
 
 
 % assumes that stats (from camera) are in the format of 
@@ -12,7 +16,7 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     if dogroundcalibration==1
         xls_raw = xlsread(xlsinputname);
         xls_time = (xls_raw(:,1)*60 + xls_raw(:,2)) * 60; % convert to seconds
-        xls_time_elapsed = xls_time - xls_time(1) - time_offset;
+        xls_time_elapsed = xls_time - xls_time(1);
         xls_temp_black = xls_raw(:,4) + 273.15;
         xls_temp_refl = xls_raw(:,5) + 273.15;
 
@@ -40,19 +44,6 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     end
     
 
-    
-    % get values of the xls temperatures at these times
-    if dogroundcalibration==1
-        temp_black = interp1(xls_time_elapsed, xls_temp_black, time_elapsed,'spline',NaN);
-        temp_refl = interp1(xls_time_elapsed, xls_temp_refl, time_elapsed,'spline',NaN);
-    else
-        temp_black = NaN([length(time_elapsed) 1]);
-        temp_refl = NaN([length(time_elapsed) 1]);
-    end
-    
-    figure;
-    plot(xls_time_elapsed, xls_temp_black,'-b'); hold on; 
-    plot(time_elapsed, temp_black, '-r');
     
     %return;
     
@@ -153,68 +144,86 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
         end
         fprintf('\n')
         
-        temperature_stats(i,4)
-        
-        % show plots
-        f2 = figure('Name','Black ref (black) uncalibrated (green) recalibrated (red)');
-        plot(time_elapsed, temp_black,'-k'); hold on;
-        plot(time_elapsed, temperature_stats(:,4),'-g');
+
         
         regressionfitagain = true;
         while (regressionfitagain==true)
-            inputans = inputdlg({'Start time (s)','Stop time (s)'},'Select index range', 1, {'0','45000'}); 
+            inputans = inputdlg({'Start time (s)','Stop time (s)','Delta (s)'},'Select index range', 1, {'0','45000',sprintf('%d', time_offset)}); 
             start_time = str2num(inputans{1});
             stop_time = str2num(inputans{2});
+            time_offset = str2num(inputans{3});
             index_start = find(time_elapsed >= (start_time),1,'first');
             index_stop = find(time_elapsed < (stop_time),1,'last');
 
-            [b,~,~,~,~] = regress(temp_black(index_start:index_stop), [ones(size(temperature_stats(index_start:index_stop,4))) temperature_stats(index_start:index_stop,4) temperature_stats(index_start:index_stop,4).^2 ]);
-
-            Tkelvin_aligned_calibrated = uint16(temp_array);
-            for i=1:num_files
-                temp_this = double(temp_array(:,:,i))/100;
-                Tkelvin_aligned_calibrated(:,:,i) = uint16(100*( b(1) + b(2) * temp_this + b(3) * temp_this.^2 ) );
-                fprintf('|');
+            % get values of the xls temperatures at these times
+            if dogroundcalibration==1
+                temp_black = interp1(xls_time_elapsed - time_offset, xls_temp_black, time_elapsed,'spline',NaN);
+            else
+                temp_black = NaN([length(time_elapsed) 1]);
             end
-            fprintf('\n');
-            %Tkelvin_aligned_calibrated = b(1) + (b(2)*100)*temp_array + (b(3)*100^2)*temp_array.^2;
-            %Tkelvin_aligned_calibrated = temp_array;
+            
+            % show plots
+            f2 = figure('Name','Black ref (black) uncalibrated (green) xlstime (blue) recalibrated (red)');
+            plot(time_elapsed, temp_black,'-k'); hold on;
+            plot(time_elapsed, temperature_stats(:,4),'-g');
+            
+            ts = temperature_stats(index_start:index_stop,4);
+            [b,~,~,~,~] = regress(temp_black(index_start:index_stop), [ones(size(ts)) ts ts.^2 ]);
 
-            temp_new = zeros([num_files 1]);
-            for i=1:num_files
-                temp_this = double(Tkelvin_aligned_calibrated(:,:,i))/100;
-                pixels_this = temp_this(pixels_keep);
-                pixels_this = pixels_this(pixels_this>0);
-                temp_new(i) = quantile(pixels_this,0.5);
-                fprintf('/');
-            end
-            fprintf('\n');
-
-
-            plot(time_elapsed, temp_new,'-r')
+            plot(xls_time_elapsed - time_offset, xls_temp_black,'-b'); hold on; 
+            plot(time_elapsed(index_start:index_stop), b(1) + b(2) * ts + b(3) * ts.^2, '-r');
+            
+            drawnow; 
             
             regressionfitagain = ~strcmp(questdlg('Done?','Fit','Yes','No','Yes'),'Yes');
+            
+            close(f2);
         end
+
+        Tkelvin_aligned_calibrated = uint16(temp_array);
+        for i=1:num_files
+            temp_this = double(temp_array(:,:,i))/100;
+            Tkelvin_aligned_calibrated(:,:,i) = uint16(100*( b(1) + b(2) * temp_this + b(3) * temp_this.^2 ) );
+            fprintf('|');
+        end
+        fprintf('\n');
+        %Tkelvin_aligned_calibrated = b(1) + (b(2)*100)*temp_array + (b(3)*100^2)*temp_array.^2;
+        %Tkelvin_aligned_calibrated = temp_array;
+
+        temp_new = zeros([num_files 1]);
+        for i=1:num_files
+            temp_this = double(Tkelvin_aligned_calibrated(:,:,i))/100;
+            pixels_this = temp_this(pixels_keep);
+            pixels_this = pixels_this(pixels_this>0);
+            temp_new(i) = quantile(pixels_this,0.5);
+            fprintf('/');
+        end
+        fprintf('\n');
+
+
+        plot(time_elapsed, temp_new,'-r')
+
+
     else
         Tkelvin_aligned_calibrated = temp_array;
     end
     
     
-    mediantemp = zeros([size(Tkelvin_aligned_calibrated,3) 1]);
-    mediantime = zeros([size(Tkelvin_aligned_calibrated,3) 1]);
-    for i=1:size(Tkelvin_aligned_calibrated,3)
-        pixels_all = double(Tkelvin_aligned_calibrated(:,:,i))/100;
-        %pixels_all = pixels_all(~isnan(pixels_all));
-        pixels_all = pixels_all(pixels_all>0);
-        
-        mediantemp(i) = median(pixels_all);
-        mediantime(i) = time_elapsed(i);
-        fprintf('-');
-    end
-    fprintf('\n');
+%     mediantemp = zeros([size(Tkelvin_aligned_calibrated,3) 1]);
+%     mediantime = zeros([size(Tkelvin_aligned_calibrated,3) 1]);
+%     for i=1:size(Tkelvin_aligned_calibrated,3)
+%         pixels_all = double(Tkelvin_aligned_calibrated(:,:,i))/100;
+%         %pixels_all = pixels_all(~isnan(pixels_all));
+%         pixels_all = pixels_all(pixels_all>0);
+%         
+%         mediantemp(i) = median(pixels_all);
+%         mediantime(i) = time_elapsed(i);
+%         fprintf('-');
+%     end
+%     fprintf('\n');
     
-    f4 = figure('Name','Image median (magenta)');
-    plot(time_elapsed, mediantemp,'-m');
+    %f4 = figure('Name','Image median (magenta)');
+    %plot(time_elapsed, mediantemp,'-m');
     
     finalstats = table(time_elapsed, temp_black, temp_atm, temp_reflected, temp_external_optics, relative_humidity, emissivity, distance_focal, time_raw); 
     
@@ -222,7 +231,7 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     image_visible_lores = imread(file_visible_lores);
     points_thermal_lores = [];
     points_visible_lores = [];
-    whichim = floor(size(Tkelvin_aligned_calibrated,3)/3);
+    whichim = floor(size(Tkelvin_aligned_calibrated,3)/2);
     image_thermal_representative = double(Tkelvin_aligned_calibrated(:,:,whichim))/100;
     image_thermal_representative = imresize(image_thermal_representative, 2);
     image_thermal_representative = rescale_image_quantile(image_thermal_representative, 0.01, 0.99);
@@ -233,6 +242,6 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     
     dosave = questdlg('Save matrix of output','Do save?','yes','no','yes');
     if (strcmp(dosave,'yes'))
-        save(outputname, 'Tkelvin_aligned_calibrated', 'finalstats','image_visible_lores_registered', '-v7.3'); % this allows for partial loading
+        save(outputname, 'Tkelvin_aligned_calibrated', 'finalstats','image_visible_lores_registered','b','time_offset', '-v7.3'); % this allows for partial loading
     end
 end
