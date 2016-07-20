@@ -17,7 +17,7 @@ function [image_thermal_representative] = analyze_image(file_thermal_mat, file_v
     num_files = size(data_thermal.finalstats, 1);
     
     % preprocess thermal image
-    image_thermal_representative = double(data_thermal.Tkelvin_aligned_calibrated(:,:,num_files/3))/100;
+    image_thermal_representative = double(data_thermal.Tkelvin_aligned_calibrated(:,:,floor(num_files/3)))/100;
     image_thermal_representative = imresize(image_thermal_representative, scalefactor);
     image_thermal_representative = rescale_image_quantile(image_thermal_representative, 0.01, 0.99);
     %image_thermal_mean = adapthisteq(image_thermal_mean, 'NumTiles',[8 8]);

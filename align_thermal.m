@@ -1,4 +1,6 @@
 % [cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/pfeiler jun 30/thermal/combined/', 2, 1, 0.5, 200);
+
+
 function [correctedMean movMean array_aligned stats] = align_thermal(folder_in_thermal_timeseries, interval_keyframes, interval_frames, threshold, keyframe_id)
     addpath('npy-matlab-master');
      
@@ -14,16 +16,21 @@ function [correctedMean movMean array_aligned stats] = align_thermal(folder_in_t
     keepfiles = ones([length(files_thermal_timeseries_npy) 1]);
     for i=1:length(files_thermal_timeseries_npy)
         fn = fullfile(folder_in_thermal_timeseries, files_thermal_timeseries_npy(i).name);
-        im_current = double(readNPY(fn));
-        
-        zeros = nnz(im_current==0);
-        if (zeros > 50)
+        try
+            im_current = double(readNPY(fn));
+
+            zeros = nnz(im_current==0);
+            if (zeros > 50)
+                fprintf('drop %d %d %s\n', i, zeros, fn);
+                keepfiles(i) = 0;
+            else
+                fprintf(' *%d* %s\n',i, fn);
+            end
+            fprintf('\n');
+        catch
             fprintf('drop %d %d %s\n', i, zeros, fn);
-            keepfiles(i) = 0;
-        else
-            fprintf(' *%d* \n',i);
+            keepfiles(i) = 0;           
         end
-        fprintf('\n');
         
     end
     files_thermal_timeseries_npy = files_thermal_timeseries_npy(keepfiles>0);

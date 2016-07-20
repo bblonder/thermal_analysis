@@ -7,6 +7,14 @@
 % [cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/painterboy jul 3/thermal/combined/', 2, 1, 0.5, 200);
 % [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa, stats, 263, 343, 1, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/painterboy jul 3/PBM 30.06.2016 temperatures.xlsx', -1250, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/painterboy jul 3/thermal/combined/160630_142527-000000-015600-visible.png', 'painterboy_2016_07_03.mat');
 
+% [cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/almont jul 14/thermal/combined/', 2, 1, 0.5, 200);
+% [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa, stats, 263, 343, 1, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/almont jul 14/thermal/Refence Data Sheet almont jul 15.xlsx', 0, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/almont jul 14/thermal/combined/952526-000000-008600-visible.png', 'almont_2016_07_14.mat');
+
+% [cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/pfeiler july 8/thermal/combined/', 2, 1, 0.5, 200);
+% [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa, stats, 263, 343, 1, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/pfeiler july 8/thermal/reference_temperature_PFEILER_08_07_2016.xlsx', 0, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/pfeiler july 8/thermal/combined/104254-000000-000000-visible.png', 'pfeiler_2016_07_08.mat');
+
+% [cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/road 23 jun/thermal/combined/', 2, 1, 0.5, 200);
+% [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa, stats, 263, 343, 1, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/road 23 jun/temperature_reference_ROAD_23_06_2016.xlsx', 1175, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/road 23 jun/thermal/combined/160623_134700-000000-007400-visible.png', 'road_2016_06_23.mat');
 
 
 % assumes that stats (from camera) are in the format of 
@@ -16,7 +24,7 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     if dogroundcalibration==1
         xls_raw = xlsread(xlsinputname);
         xls_time = (xls_raw(:,1)*60 + xls_raw(:,2)) * 60; % convert to seconds
-        xls_time_elapsed = xls_time - xls_time(1);
+        xls_time_elapsed = xls_time - xls_time(1)
         xls_temp_black = xls_raw(:,4) + 273.15;
         xls_temp_refl = xls_raw(:,5) + 273.15;
 
@@ -43,7 +51,7 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
         end
     end
     
-
+    time_elapsed
     
     %return;
     

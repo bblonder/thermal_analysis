@@ -1,0 +1,15 @@
+rename images using rename_folder.R to put start dates for 6-digit folder codes as correct datetimes (note that the timezone is GMT, so six hours ahead of Colorado)
+
+place all images and datafiles in one folder
+
+run matlab script to align data (align_thermal) playing with starting keyframe and interval (can delete badly aligned frames if needed)
+
+[cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/pfeiler jun 30/thermal/combined/', 10, 1, 0.5, 200);
+
+make sure that the reference temperature data are in the same format (column 4-6 is h/m/s, column 7 is black reference)
+
+run matlab script to calibrate data (calibrate_thermal) potentially offsetting data
+
+move resulting .mat file to desired directory
+
+run rename scanned images.R to relabel photos with species codes
