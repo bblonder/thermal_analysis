@@ -1,4 +1,4 @@
-% [cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/pfeiler jun 30/thermal/combined/', 2, 1, 0.5, 200);
+% [cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/rmbl thermal ecology/thermal data/pfeiler jun 27/thermal/combined/', 2, 1, 0.5, 200);
 
 
 function [correctedMean movMean array_aligned stats] = align_thermal(folder_in_thermal_timeseries, interval_keyframes, interval_frames, threshold, keyframe_id)
