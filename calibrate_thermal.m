@@ -16,6 +16,25 @@
 % [cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/road 23 jun/thermal/combined/', 2, 1, 0.5, 200);
 % [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa, stats, 263, 343, 1, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/road 23 jun/temperature_reference_ROAD_23_06_2016.xlsx', 1175, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/road 23 jun/thermal/combined/160623_134700-000000-007400-visible.png', 'road_2016_06_23.mat');
 
+% [cm mm aa stats]= align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/rmbl thermal ecology/thermal data/baldy 28 jul/thermal/combined 1/', 2, 1, 0.5, 200);
+% aa_small = aa(:,:,1:2980); % due to high wind & collapse at the end-
+% stats_small = stats(1:2980);
+% scary frames!
+% [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa_small, stats_small, 263, 343, 1, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/rmbl thermal ecology/thermal data/baldy 28 jul/thermal/reference_temperature_baldy_28jul.xlsx', 100, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/rmbl thermal ecology/thermal data/baldy 28 jul/thermal/combined 1/092163-000001-003600-visible.png', 'baldy_partone_2016_07_28.mat');
+
+% [cm mm aa stats]=
+% align_thermal('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/rmbl thermal ecology/thermal data/baldy 28 jul/thermal/combined 2/', 2, 1, 0.5, 200);`
+
+% take one - with calibration first part of day
+% aa_small = aa(:,:,1:2500);
+% stats_small = stats(1:2500);
+% [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa_small, stats_small, 263, 343, 1, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/rmbl thermal ecology/thermal data/baldy 28 jul/thermal/reference_temperature_baldy_28jul.xlsx', 0, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/rmbl thermal ecology/thermal data/baldy 28 jul/thermal/combined 2/160728_194758-000000-010300-visible.png', 'baldy_parttwo_2016_07_28.mat');
+
+% no ground calibration second time
+% [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(aa, stats, 263, 343, 0, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/rmbl thermal ecology/thermal data/baldy 28 jul/thermal/reference_temperature_baldy_28jul.xlsx', 0, '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/rmbl thermal ecology/thermal data/baldy 28 jul/thermal/combined 2/160728_194758-000000-010300-visible.png', 'baldy_parttwo_2016_07_28.mat');
+
+
+
 
 % assumes that stats (from camera) are in the format of 
 % [hours, minutes, seconds, temp_black, temp_refl, temp_sky, ...]
@@ -24,7 +43,7 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     if dogroundcalibration==1
         xls_raw = xlsread(xlsinputname);
         xls_time = (xls_raw(:,1)*60 + xls_raw(:,2)) * 60; % convert to seconds
-        xls_time_elapsed = xls_time - xls_time(1)
+        xls_time_elapsed = xls_time - xls_time(1);
         xls_temp_black = xls_raw(:,4) + 273.15;
         xls_temp_refl = xls_raw(:,5) + 273.15;
 
@@ -123,6 +142,10 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     end
     fprintf('\n');
     
+    if (dogroundcalibration==0)
+        temp_black = NaN([length(time_elapsed) 1]);
+    end
+    
     if (dogroundcalibration==1)
         % choose region of interest
         
@@ -166,8 +189,6 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
             % get values of the xls temperatures at these times
             if dogroundcalibration==1
                 temp_black = interp1(xls_time_elapsed - time_offset, xls_temp_black, time_elapsed,'spline',NaN);
-            else
-                temp_black = NaN([length(time_elapsed) 1]);
             end
             
             % show plots
@@ -250,6 +271,10 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     
     dosave = questdlg('Save matrix of output','Do save?','yes','no','yes');
     if (strcmp(dosave,'yes'))
+        if dogroundcalibration==0
+            b = NaN; % this allows for partial loading
+        end
+        
         save(outputname, 'Tkelvin_aligned_calibrated', 'finalstats','image_visible_lores_registered','b','time_offset', '-v7.3'); % this allows for partial loading
     end
 end
