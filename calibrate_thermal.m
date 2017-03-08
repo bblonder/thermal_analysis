@@ -88,6 +88,14 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     relative_humidity = 0.5*ones([length(stats), 1]);
     emissivity = 0.97*ones([length(stats), 1]);
     distance_focal = 2*ones([length(stats), 1]);
+    light_ir = 0*ones([length(stats), 1]);
+    light_vis = 0*ones([length(stats), 1]);
+    light_uv = 0*ones([length(stats), 1]);
+    pressure = NaN([length(stats), 1]);
+    temp_sens = 293*ones([length(stats), 1]);
+    latitude = NaN([length(stats), 1]);
+    longitude = NaN([length(stats), 1]);
+    
     for i=1:length(stats)
         try
             temp_atm(i) = stats{i}.wx_temp_air_c + 273.15; %in C, convert to K
@@ -110,6 +118,34 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
             if (distance_focal(i) > 2)
                 distance_focal(i) = 2;
             end
+        end
+        
+        try
+            light_ir(i) = stats{i}.wx_ir_lux;
+        end
+        
+        try
+            light_vis(i) = stats{i}.wx_vis_lux;
+        end
+        
+        try
+            light_uv(i) = stats{i}.wx_uv_lux;
+        end
+        
+        try
+            pressure(i) = stats{i}.wx_pressure_hpa;
+        end
+        
+        try
+            temp_sens(i) = stats{i}.TSens;
+        end
+        
+        try
+            latitude(i) = stats{i}.gps_latitude;
+        end
+        
+        try
+            longitude(i) = stats{i}.gps_longitude;
         end
     end
     
@@ -254,7 +290,7 @@ function [Tkelvin_aligned_calibrated, finalstats] = calibrate_thermal(image_arra
     %f4 = figure('Name','Image median (magenta)');
     %plot(time_elapsed, mediantemp,'-m');
     
-    finalstats = table(time_elapsed, temp_black, temp_atm, temp_reflected, temp_external_optics, relative_humidity, emissivity, distance_focal, time_raw); 
+    finalstats = table(time_elapsed, temp_black, temp_atm, temp_reflected, temp_external_optics, relative_humidity, emissivity, distance_focal, light_vis, light_ir, light_uv, pressure, temp_sens, latitude, longitude, time_raw); 
     
     % do visible alignment
     image_visible_lores = imread(file_visible_lores);
