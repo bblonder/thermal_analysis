@@ -1,14 +1,5 @@
-function [image_thermal_representative] = analyze_image_novis(file_thermal_mat, folder_out, start_frame)
-    scalefactor = 2;
-
-    if (nargin < 2)
-        folder_out = 'output';
-        start_frame = 5;
-    end
-    if (nargin < 3)
-        start_frame = 5;
-    end
-    
+function [image_thermal_representative] = re_analyze_image_bw_mask(file_thermal_mat, folder_out, filename_mask)
+  
     if ~exist(folder_out, 'dir')
         mkdir(folder_out);
     end

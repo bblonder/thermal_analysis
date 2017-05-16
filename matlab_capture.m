@@ -65,7 +65,8 @@ while ~done
                     time_str = datestr(now,'yymmdd-HHMMSS');
                     
                     save(sprintf('snapshot_%s_%s_matrix.mat',file_prefix, time_str),'img')
-                    imwrite(rescale_image_quantile(double(img), 0.01, 0.99),sprintf('snapshot_%s_%s_image.png',file_prefix, time_str));
+                    imwrite(rescale_image_quantile(double(img), 0.01, 0.99),parula(255), sprintf('snapshot_%s_%s_image.png',file_prefix, time_str));
+                    imwrite(img,sprintf('snapshot_%s_%s_image.tif',file_prefix, time_str));
                     
                     pause(frame_interval);
                     

@@ -6,6 +6,7 @@ g.NoiseReduction='On';
 g.AutoFocusMethod='Fine';
 
 nucinterval = 100;
+counter = 0;
 
 while(1)
     if (mod(counter,nucinterval)==0)
@@ -17,4 +18,6 @@ while(1)
     img = double(img) * (10/1000) - 273.15;
 
     imagesc(img); colorbar;
+    
+    counter = counter + 1;
 end
