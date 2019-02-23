@@ -2,6 +2,7 @@ nuc_count_last = 0;
 nuc_temp_sd_last = 0;
 nuc_count_max = 50; % max number of tries to fix NUC
 nuc_sd_min = 0.5; % minimum temperature s.d. in degC to allow NUC to pass
+num_failed_frames_max = 10;
 
 options = {'Camera setup', 'Camera close','AutoFocus','FocusManual','NUC','Snapshots'};
 
@@ -102,6 +103,9 @@ while ~done
 
                 all_frames_done = 0;
                 i = 0;
+                
+                num_failed_frames = 0;
+                
                 while (~all_frames_done)
                     try
                         g.IRFormat='TemperatureLinear10mK';
@@ -158,8 +162,35 @@ while ~done
                         else
                             all_frames_done = 0;
                         end
+                        
+                        % restart camera if needed
+                        if (num_failed_frames > num_failed_frames_max)
+                            try
+                                clear g;
+                                pause(0.5);
+                                g = gigecam(1);
+                                for index=1:10
+                                    % do some cycling to force the mode
+                                    g.IRFormat='Radiometric';
+                                    g.IRFormat='TemperatureLinear10mK'; %'Radiometric'
+                                    w = snapshot(g);
+                                    pause(0.5);
+                                    fprintf('.');
+                                end
+
+                                g.TSensSelector='Lens';
+                                g.NoiseReduction='On';
+                                g.AutoFocusMethod='Fine';
+                                g.NUCMode = 'Off';
+                                
+                                num_failed_frames = 0;
+                            catch
+                                warning('Restarting camera');
+                            end
+                        end
                     catch
-                        warning('image frame failed');
+                        warning('image frame failed (%d in a row)',num_failed_frames);
+                        num_failed_frames = num_failed_frames + 1;
                     end
                 end
         end
