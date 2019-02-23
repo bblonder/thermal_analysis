@@ -8,7 +8,7 @@ options = {'Camera setup', 'Camera close','AutoFocus','FocusManual','NUC','Snaps
 done = 0;
 while ~done
     action = listdlg('PromptString','Choose an action','SelectionMode','single','ListString', options, 'ListSize',[200 200],'InitialValue',3);
-    if length(action)==0
+    if isempty(action)
         done = 1;
     else
 
@@ -72,35 +72,38 @@ while ~done
                     pause(0.1);
                     [img, ts] = snapshot(g);
                     imagesc(double(img)*10/1000-273.15); colorbar;
-
+                catch
+                    warning('Manual focus or snapshot failed');
                 end
             case 5
                 try
                     [nuc_count, sd_temp_degc] = nuc_count_repeated(g, nuc_sd_min, nuc_count_max);
 
-                    sd_temp_degc
+                    fprintf('Image SD (degC): %.3f\n',sd_temp_degc);
 
                     nuc_count_last = nuc_count;
                     nuc_temp_sd_last = sd_temp_degc;
+                catch
+                    warning('NUC failed');
                 end
             case 6
-                try
-                    prompt = {'Frame interval (sec):','Number of frames:','NUC Interval (# frames)','File prefix:'};
-                    dlg_title = 'Input (set numframes=0 for continuous logging)';
-                    num_lines = 1;
-                    defaultans = {'5','0','0','test'};
-                    answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
-                    frame_interval = str2num(answer{1}); 
-                    frame_count = str2num(answer{2});
-                    nuc_frame_interval = str2num(answer{3});
-                    file_prefix = answer{4};
+                prompt = {'Frame interval (sec):','Number of frames:','NUC Interval (# frames)','File prefix:'};
+                dlg_title = 'Input (set Number of frames=0 for continuous logging)';
+                num_lines = 1;
+                defaultans = {'5','0','0','test'};
+                answer = inputdlg(prompt,dlg_title,num_lines,defaultans);
+                frame_interval = str2num(answer{1}); 
+                frame_count = str2num(answer{2});
+                nuc_frame_interval = str2num(answer{3});
+                file_prefix = answer{4};
 
-                    % set home directory as path
-                    selpath = uigetdir('~','Choose a directory');
+                % set home directory as path
+                selpath = uigetdir('~','Choose a directory');
 
-                    all_frames_done = 0;
-                    i = 0;
-                    while (~all_frames_done)
+                all_frames_done = 0;
+                i = 0;
+                while (~all_frames_done)
+                    try
                         g.IRFormat='TemperatureLinear10mK';
                         [img, ts] = snapshot(g);
 
@@ -147,6 +150,7 @@ while ~done
                                 nuc_temp_sd_last = sd_temp_degc;
                             end
                         end
+                        
                         % iterate
                         i=i+1;
                         if (frame_count > 0)
@@ -154,10 +158,9 @@ while ~done
                         else
                             all_frames_done = 0;
                         end
+                    catch
+                        warning('image frame failed');
                     end
-
-                catch
-                    warning('could not capture images');
                 end
         end
     end
