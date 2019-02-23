@@ -1,16 +1,16 @@
 g = gigecam(1);
 
 g.IRFormat='TemperatureLinear10mK'; %'Radiometric'
-g.TSensSelector='Shutter';
+g.TSensSelector='Lens';
 g.NoiseReduction='On';
 g.AutoFocusMethod='Fine';
+g.NUCMode = 'Off';
 
-nucinterval = 100;
+focusinterval = 100;
 counter = 0;
 
 while(1)
-    if (mod(counter,nucinterval)==0)
-        executeCommand(g, 'NUCAction');
+    if (mod(counter,focusinterval)==0)
         executeCommand(g, 'AutoFocus');
         pause(3);
     end

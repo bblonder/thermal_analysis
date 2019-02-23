@@ -1,4 +1,4 @@
-%x = analyze_image('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt jun 20/thermal/cbt_2016_06_20_newest.mat', '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/thermal ecology/thermal data/cbt jun 20/visible/POT-2-1 (9143).jpg','~/Downloads/out/');
+%x = analyze_image('/Users/benjaminblonder/Documents/rmbl/rmbl 2016/rmbl thermal ecology/thermal data/baldy 28 jul/baldy_partone_2016_07_28.mat', '/Users/benjaminblonder/Documents/rmbl/rmbl 2016/rmbl thermal ecology/thermal data/baldy 28 jul/visible/ERIUMB1-1 (0142).jpg','~/Downloads/out/');
 function [image_thermal_representative] = analyze_image(file_thermal_mat, file_visible, folder_out)
     scalefactor = 2;
 
