@@ -2,7 +2,7 @@ function [Tkelvin] = calibrated_temperature_simple(counts, temp_atm, temp_reflec
     %[temp_atm, temp_reflected, temp_external_optics, relative_humidity, emissivity, distance_focal]
 
     Tkelvin = calibrated_temperature( ...
-        counts, ... % input data
+        double(counts), ... % input data
         relative_humidity, ... % relative humidity (fraction)
         temp_atm, ... % atmospheric temp (K)
         distance_focal, ... % object distance (m)
