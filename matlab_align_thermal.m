@@ -1,5 +1,5 @@
-% [array_aligned, name, datetimes]= matlab_align_thermal('east', 2, 1, 0.5, 273+10,273+40, 10, 'out');
-function [array_aligned, name, datetimes] = matlab_align_thermal(folder_in_thermal_timeseries, interval_keyframes, interval_frames, freak_threshold, guess_temp_lo_K, guess_temp_hi_K, guess_obj_dist_m, output_prefix)
+% [array_aligned, name, datetimes]= matlab_align_thermal('east', 2, 1, 273+10,273+40, 10, 'out');
+function [array_aligned, name, datetimes] = matlab_align_thermal(folder_in_thermal_timeseries, interval_keyframes, interval_frames, guess_temp_lo_K, guess_temp_hi_K, guess_obj_dist_m, output_prefix)
     % load in thermal images
     files_thermal_timeseries = dir(fullfile(folder_in_thermal_timeseries, '*_radiometric.mat'));
     % extract good names
@@ -56,20 +56,22 @@ function [array_aligned, name, datetimes] = matlab_align_thermal(folder_in_therm
     for i=1:length(indexvals)
         fn = fullfile(folder_in_thermal_timeseries, files_thermal_timeseries(indexvals(i)).name);
         
-        try
+        %try
             if (mod(indexvals(i),interval_keyframes)==1)
                 fprintf('*');
                 % Move old frames
                 imgA = imgB; % z^-1
                 imgAp = imgBp; % z^-1
                 % Read in new frame
-                imgB = double(readNPY(fn));
+                fileB = load(fn);
+                imgB = double(fileB.img_rm);
                 imgB_untransformed = imgB;
                 imgB = imgaussfilt(rescale_image_quantile(imgB, 0.01, 0.99),2);
+                
                 movMean = movMean + imgB;
 
                 % do stabilization transform and warp
-                H = cvexEstStabilizationTform(imgA,imgB,freak_threshold);
+                H = cvexEstStabilizationTform(imgA,imgB);
                 HsRt = cvexTformToSRT(H);
                 Hcumulative = HsRt * Hcumulative;
                 imgBp = imwarp(imgB,affine2d(Hcumulative),'OutputView',imref2d(size(imgB)));
@@ -80,7 +82,9 @@ function [array_aligned, name, datetimes] = matlab_align_thermal(folder_in_therm
                 
                 count_average = count_average + 1;
             end
-        end
+        %catch
+        %    fprintf('stabilization failed');
+        %end
         
         file_current = load(fn);
         im_current = double(file_current.img_rm);
