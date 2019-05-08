@@ -1,7 +1,7 @@
-% [~, ~, array_aligned, name, datetimes]= matlab_align_thermal('~/Desktop/thermal excerpt panama/east/', 2, 1, 0.5, 273+10,273+40, 10, 'out');
-function [correctedMean movMean array_aligned, name, datetimes] = matlab_align_thermal(folder_in_thermal_timeseries, interval_keyframes, interval_frames, freak_threshold, guess_temp_lo_K, guess_temp_hi_K, guess_obj_dist_m, output_prefix)
+% [array_aligned, name, datetimes]= matlab_align_thermal('east', 2, 1, 0.5, 273+10,273+40, 10, 'out');
+function [array_aligned, name, datetimes] = matlab_align_thermal(folder_in_thermal_timeseries, interval_keyframes, interval_frames, freak_threshold, guess_temp_lo_K, guess_temp_hi_K, guess_obj_dist_m, output_prefix)
     % load in thermal images
-    files_thermal_timeseries = dir([folder_in_thermal_timeseries '*_radiometric.mat']);
+    files_thermal_timeseries = dir(fullfile(folder_in_thermal_timeseries, '*_radiometric.mat'));
     % extract good names
     filenames_stripped = strings(length(files_thermal_timeseries),1);
     for i=1:length(files_thermal_timeseries)
