@@ -1,5 +1,5 @@
-% [array_aligned, name, datetimes]= matlab_align_thermal('east', 2, 1, 273+10,273+40, 10, 'out');
-function [array_aligned, name, datetimes] = matlab_align_thermal(folder_in_thermal_timeseries, interval_keyframes, interval_frames, guess_temp_lo_K, guess_temp_hi_K, guess_obj_dist_m, output_prefix)
+% [array_aligned, name, datetimes] = matlab_align_thermal('east', 273+10,273+40, 10);
+function [array_aligned, name, datetimes] = matlab_align_thermal(folder_in_thermal_timeseries, guess_temp_lo_K, guess_temp_hi_K, guess_obj_dist_m, output_prefix)
     % load in thermal images
     files_thermal_timeseries = dir(fullfile(folder_in_thermal_timeseries, '*_radiometric.mat'));
     % extract good names
@@ -34,79 +34,6 @@ function [array_aligned, name, datetimes] = matlab_align_thermal(folder_in_therm
     filenames_stripped = filenames_stripped(keepfiles>0);
     numfiles_thermal_timeseries = length(files_thermal_timeseries);
     
-    % get first frame
-    fileMean = load(fullfile(folder_in_thermal_timeseries, files_thermal_timeseries(1).name));
-    movMean = double(fileMean.img_rm);
-    % rescale frame
-    movMean = imgaussfilt(rescale_image_quantile(movMean, 0.01, 0.99),2);
-    imgB = movMean;
-    imgBp = imgB;
-    correctedMean = imgBp;
-    Hcumulative = eye(3);
-    count_average = 0;
-    
-    transform_current = Hcumulative;
-    
-    indexvals = 1:interval_frames:numfiles_thermal_timeseries;        
-    % allocate memory
-    array_aligned = repmat(uint16(zeros(1)),[480 640 length(indexvals)]);
-
-    % iterate through each frame
-    f = figure;
-    for i=1:length(indexvals)
-        fn = fullfile(folder_in_thermal_timeseries, files_thermal_timeseries(indexvals(i)).name);
-        
-        %try
-            if (mod(indexvals(i),interval_keyframes)==1)
-                fprintf('*');
-                % Move old frames
-                imgA = imgB; % z^-1
-                imgAp = imgBp; % z^-1
-                % Read in new frame
-                fileB = load(fn);
-                imgB = double(fileB.img_rm);
-                imgB_untransformed = imgB;
-                imgB = imgaussfilt(rescale_image_quantile(imgB, 0.01, 0.99),2);
-                
-                movMean = movMean + imgB;
-
-                % do stabilization transform and warp
-                H = cvexEstStabilizationTform(imgA,imgB);
-                HsRt = cvexTformToSRT(H);
-                Hcumulative = HsRt * Hcumulative;
-                imgBp = imwarp(imgB,affine2d(Hcumulative),'OutputView',imref2d(size(imgB)));
-                % add new value to mean
-                correctedMean = correctedMean + imgBp;
-                
-                transform_current = Hcumulative;
-                
-                count_average = count_average + 1;
-            end
-        %catch
-        %    fprintf('stabilization failed');
-        %end
-        
-        file_current = load(fn);
-        im_current = double(file_current.img_rm);
-
-        % transform the raw image too
-        im_current_warped = imwarp(im_current,affine2d(transform_current),'OutputView',imref2d(size(im_current)));         
-        
-        imshow(rescale_image_quantile(im_current_warped, 0.05, 0.95));
-        % reconvert back to uint16
-        array_aligned(:,:,i) = uint16(im_current_warped);
-        
-        fprintf('%d ', indexvals(i))
-
-    end
-    
-    % close the window
-    close(f);
-    
-    % calculate the mean stats
-    correctedMean = correctedMean/(count_average);
-    movMean = movMean/(count_average);
-    
     % convert names to dates
     for (i=1:length(filenames_stripped))
         dts = split(filenames_stripped(i),'_');
@@ -115,14 +42,49 @@ function [array_aligned, name, datetimes] = matlab_align_thermal(folder_in_therm
     % keep a name 
     name = dts(1);
 
-    fprintf('\n')
+    % make temporary directories
+    td_in = 'temp_in';
+    td_out = 'temp_out';
+    if ~exist(td_in)
+        mkdir(td_in);
+    end
+    if ~exist(td_out)
+        mkdir(td_out);
+    end
+
+    for i=1:numfiles_thermal_timeseries
+        fn = fullfile(folder_in_thermal_timeseries, files_thermal_timeseries(i).name);
+        file_current = load(fn);
+        im_current = file_current.img_rm;
+        
+        imwrite(im_current(:,:,[1 1 1]), fullfile(td_in, sprintf('%d.tiff',i)));
+        fprintf('tempfile writing frame %d\n', i);
+    end
+    
+    % run stabilizer
+    stabilize(td_in, td_out, 'tiff', numfiles_thermal_timeseries, 1);
+
+    % allocate memory
+    array_aligned = repmat(uint16(zeros(1)),[480 640 numfiles_thermal_timeseries]);
+    % put all the temp files back together
+    for i=1:numfiles_thermal_timeseries
+        im_stabilized = imread(fullfile(td_out, sprintf('%d.tiff',i)));
+        array_aligned(:,:,i) = im_stabilized(:,:,1); % pick any channel
+    end
     
     % save the raw array
-    outputname = sprintf("%s_%s.mat",output_prefix, name);
+    outputname = sprintf("%s.mat", name);
     save(outputname, 'array_aligned', 'name', 'datetimes', '-v7.3'); % this allows for partial loading
      
     % write a guessed temperature movie
-    matlab_play_movie(array_aligned, name, datetimes, guess_temp_lo_K, guess_temp_hi_K, guess_obj_dist_m, outputname)
+    matlab_play_movie(array_aligned, name, datetimes, guess_temp_lo_K, guess_temp_hi_K, guess_obj_dist_m);
+    
+    % remove all figure windows
+    close all;
+    
+    % remove the temporary directories
+    rmdir(td_in,'s');
+    rmdir(td_out,'s');
 end
 
 

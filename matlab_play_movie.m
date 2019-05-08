@@ -1,5 +1,5 @@
-function [] = matlab_play_movie(array_aligned, name, datetimes, temp_lo, temp_hi, obj_dist, filename_out)
-    v = VideoWriter(sprintf('%s.mp4',filename_out),'MPEG-4');
+function [] = matlab_play_movie(array_aligned, name, datetimes, temp_lo, temp_hi, obj_dist)
+    v = VideoWriter(sprintf('%s.mp4',name),'MPEG-4');
     open(v);
     
     fig = figure('Position', [1, 1, 900, 800]);
